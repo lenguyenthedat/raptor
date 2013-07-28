@@ -1,3 +1,5 @@
+-- Copyright 2013 Dat Le <dat.le@zalora.com>
+
 -- Received metadata and stock info.
 -- Output a smart mapping of SKUs to their similar SKUs (which has more stock)
 
