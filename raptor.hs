@@ -1,3 +1,5 @@
+-- Copyright 2013 Dat Le <dat.le@zalora.com>
+
 module Main where 
 import Data.List.Split
 import Data.List
