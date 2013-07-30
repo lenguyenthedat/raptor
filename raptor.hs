@@ -16,11 +16,13 @@ type SKU = String
 type SKU_Distance = String
 type USER = String
 main = do
-
-  	let si		args <- getArgs
-		let country = args !! 0 ze = read $ args !! 1
+		args <- getArgs
+		let country = args !! 0 
+		let size = read $ args !! 1
+		let algorithm = args !! 2
 		purchase <- readFile $ "Data/VTD_purchased_" ++ country ++ ".csv"
 		view 	 <- readFile $ "Data/VTD_view_" ++ country ++ ".csv"
+		cart 	 <- readFile $ "Data/VTD_cart_" ++ country ++ ".csv"
 		valid    <- readFile $ "Data/valid_skus_" ++ country ++ ".csv"
 		instock  <- readFile $ "Data/instock_skus_" ++ country ++ ".csv"
 		male     <- readFile $ "Data/sku_male_" ++ country ++ ".csv"
@@ -35,33 +37,41 @@ main = do
 		let sku_src_female = intersect sku_female sku_src
 		let purchase_map = toMap purchase
 		let view_map = toMap view
-		outh <- openFile ("Result/Raptor_" ++ country ++ ".csv") WriteMode
-		--hPutStrLn outh $ toStr country $ apply_jaccard size sku_src_male sku_dst_male purchase_map 
-		--hPutStrLn outh $ toStr country $ apply_jaccard size sku_src_female sku_dst_female purchase_map 
-		--hPutStrLn outh $ toStr country $ apply_bayes_jaccard size sku_src_male sku_dst_male purchase_map view_map 
-		--hPutStrLn outh $ toStr country $ apply_bayes_jaccard size sku_src_female sku_dst_female purchase_map view_map 
-		hPutStrLn outh $ toStr country $ apply_views_jaccard size sku_src_male sku_dst_male purchase_map view_map 
-		hPutStrLn outh $ toStr country $ apply_views_jaccard size sku_src_female sku_dst_female purchase_map view_map 
-		hClose outh
+		let cart_map = toMap cart
+		outh <- openFile ("Result/" ++ algorithm ++ "/Raptor_" ++ country ++ ".csv") WriteMode
+		case algorithm of
+			"original" -> hPutStrLn outh (toStr country (apply_jaccard size sku_src_male sku_dst_male purchase_map cart_map)) >>
+			              hPutStrLn outh (toStr country (apply_jaccard size sku_src_female sku_dst_female purchase_map cart_map)) >>
+			              hClose outh
+			"bayes" -> hPutStrLn outh (toStr country (apply_bayes_jaccard size sku_src_male sku_dst_male purchase_map view_map)) >>
+			           hPutStrLn outh (toStr country (apply_bayes_jaccard size sku_src_female sku_dst_female purchase_map view_map)) >>
+			           hClose outh
+			"vtd" -> hPutStrLn outh (toStr country (apply_vtd_jaccard size sku_src_male sku_dst_male purchase_map view_map)) >>
+			         hPutStrLn outh (toStr country (apply_vtd_jaccard size sku_src_female sku_dst_female purchase_map view_map)) >>
+					 hClose outh
 
--- Normal Jaccard
-apply_jaccard :: Int -> [SKU] -> [SKU] -> (Map.Map SKU [USER]) -> [(SKU,[(SKU,Float)])]
-apply_jaccard size sku_src sku_dst purchase_map  = 
-	[ (sku1, apply_jaccard_for_sku size sku1 sku_src sku_dst purchase_map ) | sku1 <- sku_src ]
+-- original
+apply_jaccard :: Int -> [SKU] -> [SKU] -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> [(SKU,[(SKU,Float)])]
+apply_jaccard size sku_src sku_dst purchase_map cart_map = 
+	[ (sku1, apply_jaccard_for_sku size sku1 sku_src sku_dst purchase_map cart_map) | sku1 <- sku_src ]
 
-apply_jaccard_for_sku :: Int -> SKU -> [SKU] -> [SKU] -> (Map.Map SKU [USER]) -> [(SKU,Float)]
-apply_jaccard_for_sku size sku1 sku_src sku_dst purchase_map  = 
+apply_jaccard_for_sku :: Int -> SKU -> [SKU] -> [SKU] -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> [(SKU,Float)]
+apply_jaccard_for_sku size sku1 sku_src sku_dst purchase_map cart_map = 
 	take size $ sortBy (flip (comparing snd)) $ 
-	[ (sku2,(jaccard sku1 sku2 purchase_map )) | sku2 <- filter_related_sku sku1 sku_dst purchase_map]
+	[ (sku2,(jaccard sku1 sku2 purchase_map cart_map)) | sku2 <- filter_related_sku sku1 sku_dst cart_map]
 
-jaccard :: SKU -> SKU -> (Map.Map SKU [USER]) -> Float
-jaccard sku1 sku2 purchase_map  = 
+jaccard :: SKU -> SKU -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> Float
+jaccard sku1 sku2 purchase_map cart_map = 
 	let purchase_sku1 = safeGetValue purchase_map sku1 in
 	let purchase_sku2 = safeGetValue purchase_map sku2 in
 	let ints_purchase = floatLen (intersect purchase_sku1 purchase_sku2) in
-	ints_purchase / (floatLen purchase_sku1 + floatLen purchase_sku2 - ints_purchase)
+	let cart_sku1 = safeGetValue cart_map sku1 in
+	let cart_sku2 = safeGetValue cart_map sku2 in
+	let ints_cart = floatLen (intersect cart_sku1 cart_sku2) in
+	(wilson95 ints_purchase (floatLen purchase_sku1 + floatLen purchase_sku2 - ints_purchase)) 
+	+ 0.2 * (wilson95 ints_cart (floatLen cart_sku1 + floatLen cart_sku2 - ints_cart)) 
 
--- Bayes Jaccard
+-- bayes
 apply_bayes_jaccard :: Int -> [SKU] -> [SKU] -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> [(SKU,[(SKU,Float)])]
 apply_bayes_jaccard size sku_src sku_dst purchase_map view_map  = 
 	[ (sku1, apply_bayes_jaccard_for_sku size sku1 sku_src sku_dst purchase_map view_map ) | sku1 <- sku_src]
@@ -82,25 +92,25 @@ bayes_jaccard sku1 sku2 purchase_map view_map
 				  let ints_purchase = floatLen (intersect purchase_sku1 purchase_sku2) in
 				  let ints_purchase1_view2 = floatLen (intersect purchase_sku1 view_sku2) in
 				  let ints_purchase2_view1 = floatLen (intersect purchase_sku2 view_sku1) in
-				  ints_purchase / (ints_purchase1_view2 + ints_purchase2_view1 + ints_purchase)
+				  wilson95 ints_purchase (ints_purchase1_view2 + ints_purchase2_view1)
 
--- View Jaccard
-apply_views_jaccard :: Int -> [SKU] -> [SKU] -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> [(SKU,[(SKU,Float)])]
-apply_views_jaccard size sku_src sku_dst purchase_map view_map  = 
-	[ (sku1, apply_views_jaccard_for_sku size sku1 sku_src sku_dst purchase_map view_map ) | sku1 <- sku_src]
+-- vtd
+apply_vtd_jaccard :: Int -> [SKU] -> [SKU] -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> [(SKU,[(SKU,Float)])]
+apply_vtd_jaccard size sku_src sku_dst purchase_map view_map  = 
+	[ (sku1, apply_vtd_jaccard_for_sku size sku1 sku_src sku_dst purchase_map view_map ) | sku1 <- sku_src]
 
-apply_views_jaccard_for_sku :: Int -> SKU -> [SKU] -> [SKU] -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> [(SKU,Float)]
-apply_views_jaccard_for_sku size sku1 sku_src sku_dst purchase_map view_map = 
+apply_vtd_jaccard_for_sku :: Int -> SKU -> [SKU] -> [SKU] -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> [(SKU,Float)]
+apply_vtd_jaccard_for_sku size sku1 sku_src sku_dst purchase_map view_map = 
 	take size $ sortBy (flip (comparing snd)) $ 
-	[ (sku2,(views_jaccard sku1 sku2 purchase_map view_map )) | sku2 <- filter_related_sku_view sku1 sku_dst purchase_map view_map ]
+	[ (sku2,(vtd_jaccard sku1 sku2 purchase_map view_map )) | sku2 <- filter_related_sku_vtd sku1 sku_dst purchase_map view_map ]
 
-views_jaccard :: SKU -> SKU -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> Float
-views_jaccard sku1 sku2 purchase_map view_map = let view_sku1 	  = safeGetValue view_map sku1 in
+vtd_jaccard :: SKU -> SKU -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> Float
+vtd_jaccard sku1 sku2 purchase_map view_map = let view_sku1 	  = safeGetValue view_map sku1 in
 												let view_sku2 	  = safeGetValue view_map sku2 in
 												let purchase_sku2 = safeGetValue purchase_map sku2 in
 				 							    let ints_purchase2_view1 = floatLen (intersect purchase_sku2 view_sku1) in
 				 							    let ints_view            = floatLen (intersect view_sku1 view_sku2) in
-				 							    ints_purchase2_view1 / (ints_view + ints_purchase2_view1)
+				 							    wilson95 ints_purchase2_view1 ints_view
 
 -- auxilary functions
 -- given an SKU, a list of SKUs to be fitered, a purchase_map
@@ -110,8 +120,8 @@ filter_related_sku sku sku_dst purchase_map =
 	filter (\other_sku -> other_sku /= sku && 
 					       length (intersect (safeGetValue purchase_map other_sku) (safeGetValue purchase_map sku)) > 0) sku_dst
 
-filter_related_sku_view :: SKU -> [SKU] -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) ->[SKU]
-filter_related_sku_view sku sku_dst purchase_map view_map = 
+filter_related_sku_vtd :: SKU -> [SKU] -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) ->[SKU]
+filter_related_sku_vtd sku sku_dst purchase_map view_map = 
 	filter (\other_sku -> other_sku /= sku && 
 					       length (intersect (safeGetValue purchase_map other_sku) (safeGetValue view_map sku)) > 0) sku_dst
 
@@ -133,3 +143,7 @@ toDataFrame input = map (splitOn "\t") (lines input)
 
 toStr :: String ->  [(SKU,[(SKU,Float)])] -> String
 toStr country result = intercalate "\n" $ map (\(sku,skus) -> country ++ "\t" ++ sku ++ "\t" ++ intercalate "\t" (map (\(sku,score) -> (printf "%.2f" score :: String) ++ "-" ++ sku) skus)) result 
+
+wilson95 :: Float -> Float -> Float
+wilson95 0 0 = 0
+wilson95 positive negative = 100 * ((positive + 1.9208) / (positive + negative) - 1.96 * sqrt((positive * negative) / (positive + negative) + 0.9604) / (positive + negative)) /  (1 + 3.8416 / (positive + negative))
