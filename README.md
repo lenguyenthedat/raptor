@@ -13,5 +13,6 @@ Basically tries to answer the question: if a customer view this item, what are t
 
 Base on the nature of each algorithms, Original and Bayes Jaccard are more applicable for a Cart Based Recommendation System, while VTD is more  applicable for the Product Based Recommendation System
 
-The scoring function for these approach is powered by Wilson Score:
+The scoring function for these approach is powered by Wilson Score (for simplicity, Wilson score of 95% confidence):
 http://www.evanmiller.org/how-not-to-sort-by-average-rating.html
+
