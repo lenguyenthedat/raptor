@@ -3,7 +3,7 @@ Raptor
 
 An Online Retail Recommendation System developed in Haskell.
 
-Raptor learns from customer behaviors when they do online shopping: View and item, Add an item to Card, and Purchase an item.
+Raptor learns from customer behaviors when they do online shopping: View an item, Add an item to Card, and Purchase an item.
 
 Currently there are 3 different algorithms - specified in raptor.hs:
 - Original Jaccard Distance, based heavily on information about items that has been purchased / added to cart together.
