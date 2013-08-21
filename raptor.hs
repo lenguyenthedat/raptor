@@ -16,39 +16,39 @@ type SKU = String
 type SKU_Distance = String
 type USER = String
 main = do
-		args <- getArgs
-		let country = args !! 0 
-		let size = read $ args !! 1
-		let algorithm = args !! 2
-		purchase <- readFile $ "Data/VTD_purchased_" ++ country ++ ".csv" 	-- SKU - USERS has purchased
-		view 	 <- readFile $ "Data/VTD_view_" ++ country ++ ".csv" 		-- SKU - USERS has viewed
-		cart 	 <- readFile $ "Data/VTD_cart_" ++ country ++ ".csv" 		-- SKU - USERS has put-in-cart
-		valid    <- readFile $ "Data/valid_skus_" ++ country ++ ".csv" 		-- SKUs that has enough stock to be in the list of recommendation
-		instock  <- readFile $ "Data/instock_skus_" ++ country ++ ".csv" 	-- SKUs that has stock to be calculated
-		male     <- readFile $ "Data/sku_male_" ++ country ++ ".csv" 		-- SKUs that is for male
-		female   <- readFile $ "Data/sku_female_" ++ country ++ ".csv" 		-- SKUs that is for female
-		let sku_src = indexAsList instock
-		let sku_dst = indexAsList valid
-		let sku_male = indexAsList male
-		let sku_female = indexAsList female
-		let sku_dst_male = intersect sku_male sku_dst
-		let sku_dst_female = intersect sku_female sku_dst
-		let sku_src_male = intersect sku_male sku_src
-		let sku_src_female = intersect sku_female sku_src
-		let purchase_map = toMap purchase
-		let view_map = toMap view
-		let cart_map = toMap cart
-		outh <- openFile ("Result/" ++ algorithm ++ "/Raptor_" ++ country ++ ".csv") WriteMode
-		case algorithm of
-			"original" -> hPutStrLn outh (toStr country (apply_jaccard size sku_src_male sku_dst_male purchase_map cart_map)) >>
-			              hPutStrLn outh (toStr country (apply_jaccard size sku_src_female sku_dst_female purchase_map cart_map)) >>
-			              hClose outh
-			"bayes" -> hPutStrLn outh (toStr country (apply_bayes_jaccard size sku_src_male sku_dst_male purchase_map view_map)) >>
-			           hPutStrLn outh (toStr country (apply_bayes_jaccard size sku_src_female sku_dst_female purchase_map view_map)) >>
-			           hClose outh
-			"vtd" -> hPutStrLn outh (toStr country (apply_vtd_jaccard size sku_src_male sku_dst_male purchase_map view_map)) >>
-			         hPutStrLn outh (toStr country (apply_vtd_jaccard size sku_src_female sku_dst_female purchase_map view_map)) >>
-					 hClose outh
+	args <- getArgs
+	let country = args !! 0 
+	let size = read $ args !! 1
+	let algorithm = args !! 2
+	purchase <- readFile $ "Data/VTD_purchased_" ++ country ++ ".csv" -- SKU - USERS has purchased
+	view 	 <- readFile $ "Data/VTD_view_" ++ country ++ ".csv" 	  -- SKU - USERS has viewed
+	cart 	 <- readFile $ "Data/VTD_cart_" ++ country ++ ".csv" 	  -- SKU - USERS has put-in-cart
+	valid    <- readFile $ "Data/valid_skus_" ++ country ++ ".csv" 	  -- SKUs that has enough stock to be in the list of recommendation
+	instock  <- readFile $ "Data/instock_skus_" ++ country ++ ".csv"  -- SKUs that has stock to be calculated
+	male     <- readFile $ "Data/sku_male_" ++ country ++ ".csv" 	  -- SKUs that is for male
+	female   <- readFile $ "Data/sku_female_" ++ country ++ ".csv" 	  -- SKUs that is for female
+	let sku_src = indexAsList instock
+	let sku_dst = indexAsList valid
+	let sku_male = indexAsList male
+	let sku_female = indexAsList female
+	let sku_dst_male = intersect sku_male sku_dst
+	let sku_dst_female = intersect sku_female sku_dst
+	let sku_src_male = intersect sku_male sku_src
+	let sku_src_female = intersect sku_female sku_src
+	let purchase_map = toMap purchase
+	let view_map = toMap view
+	let cart_map = toMap cart
+	outh <- openFile ("Result/" ++ algorithm ++ "/Raptor_" ++ country ++ ".csv") WriteMode
+	case algorithm of
+		"original" -> hPutStrLn outh (toStr country (apply_jaccard size sku_src_male sku_dst_male purchase_map cart_map)) >>
+		              hPutStrLn outh (toStr country (apply_jaccard size sku_src_female sku_dst_female purchase_map cart_map)) >>
+		              hClose outh
+		"bayes" -> hPutStrLn outh (toStr country (apply_bayes_jaccard size sku_src_male sku_dst_male purchase_map view_map)) >>
+		           hPutStrLn outh (toStr country (apply_bayes_jaccard size sku_src_female sku_dst_female purchase_map view_map)) >>
+		           hClose outh
+		"vtd" -> hPutStrLn outh (toStr country (apply_vtd_jaccard size sku_src_male sku_dst_male purchase_map view_map)) >>
+		         hPutStrLn outh (toStr country (apply_vtd_jaccard size sku_src_female sku_dst_female purchase_map view_map)) >>
+				 hClose outh
 
 -- original
 apply_jaccard :: Int -> [SKU] -> [SKU] -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> [(SKU,[(SKU,Float)])]
