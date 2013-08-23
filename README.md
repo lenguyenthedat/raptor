@@ -96,8 +96,12 @@ Sample Input
 
 Sample Output
 -----------
+    
+    $ ghc raptor.hs
+    [1 of 1] Compiling Main             ( raptor.hs, raptor.o )
+    Linking raptor ...
 
-    $ ./Jaccard sg 3 vtd
+    $ ./raptor sg 3 vtd
     $ cat Result/vtd/Raptor_sg.csv 
     sg	sku5	9.45-sku6	9.45-sku8
     sg	sku6	
@@ -110,7 +114,7 @@ Sample Output
     sg	sku3	15.00-sku1	9.45-sku2
     sg	sku4	9.68-sku1	9.45-sku3
 
-    $ ./Jaccard sg 3 original
+    $ ./raptor sg 3 original
     $ cat Result/original/Raptor_sg.csv 
     sg	sku5	7.38-sku8
     sg	sku6	
@@ -123,7 +127,7 @@ Sample Output
     sg	sku3	14.11-sku1	7.06-sku2	0.60-sku4
     sg	sku4	4.65-sku1	0.60-sku2	0.60-sku3
 
-    $ ./Jaccard sg 3 bayes
+    $ ./raptor sg 3 bayes
     $ cat Result/bayes/Raptor_sg.csv 
     sg	sku5	6.15-sku8
     sg	sku6	
