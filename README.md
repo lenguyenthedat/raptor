@@ -98,7 +98,7 @@ Sample Output
 -----------
 
     $ ./Jaccard sg 3 vtd
-    $ cat Result/Raptor_sg.csv 
+    $ cat Result/vtd/Raptor_sg.csv 
     sg	sku5	9.45-sku6	9.45-sku8
     sg	sku6	
     sg	sku7	9.45-sku6	9.45-sku8
@@ -110,3 +110,28 @@ Sample Output
     sg	sku3	15.00-sku1	9.45-sku2
     sg	sku4	9.68-sku1	9.45-sku3
 
+    $ ./Jaccard sg 3 original
+    $ cat Result/original/Raptor_sg.csv 
+    sg	sku5	7.38-sku8
+    sg	sku6	
+    sg	sku7	7.38-sku8
+    sg	sku8	7.38-sku5	7.38-sku7
+    sg	sku9	
+    sg	sku0	18.00-sku3	14.11-sku1	7.06-sku2
+    sg	sku1	14.11-sku3	5.28-sku2	4.65-sku4
+    sg	sku2	7.06-sku3	5.28-sku1	0.60-sku4
+    sg	sku3	14.11-sku1	7.06-sku2	0.60-sku4
+    sg	sku4	4.65-sku1	0.60-sku2	0.60-sku3
+
+    $ ./Jaccard sg 3 bayes
+    $ cat Result/bayes/Raptor_sg.csv 
+    sg	sku5	6.15-sku8
+    sg	sku6	
+    sg	sku7	6.15-sku8
+    sg	sku8	6.15-sku5	6.15-sku7
+    sg	sku9	
+    sg	sku0	9.68-sku3	8.22-sku1	6.15-sku2
+    sg	sku1	9.68-sku3	6.15-sku2	3.01-sku4
+    sg	sku2	6.15-sku1	6.15-sku3
+    sg	sku3	9.68-sku1	6.15-sku2
+    sg	sku4	3.01-sku1
