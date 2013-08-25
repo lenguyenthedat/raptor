@@ -100,19 +100,13 @@ Sample Output
     $ ghc raptor.hs
     [1 of 1] Compiling Main             ( raptor.hs, raptor.o )
     Linking raptor ...
+    
+    $ ghc Joining-Raptors.hs 
+    [1 of 1] Compiling Main             ( Joining-Raptors.hs, Joining-Raptors.o )
+    Linking Joining-Raptors ...
 
-    $ ./raptor sg 3 vtd
-    $ cat Result/vtd/Raptor_sg.csv 
-    sg	sku5	9.45-sku6	9.45-sku8
-    sg	sku6	
-    sg	sku7	9.45-sku6	9.45-sku8
-    sg	sku8	9.45-sku5	9.45-sku7
-    sg	sku9	9.45-sku7	9.45-sku8
-    sg	sku0	15.82-sku1	15.00-sku3	11.76-sku4
-    sg	sku1	15.82-sku4	15.00-sku3	4.56-sku2
-    sg	sku2	15.00-sku4	9.45-sku3	4.56-sku1
-    sg	sku3	15.00-sku1	9.45-sku2
-    sg	sku4	9.68-sku1	9.45-sku3
+original
+--------
 
     $ ./raptor sg 3 original
     $ cat Result/original/Raptor_sg.csv 
@@ -127,6 +121,9 @@ Sample Output
     sg	sku3	14.11-sku1	7.06-sku2	0.60-sku4
     sg	sku4	4.65-sku1	0.60-sku2	0.60-sku3
 
+bayes
+-----
+
     $ ./raptor sg 3 bayes
     $ cat Result/bayes/Raptor_sg.csv 
     sg	sku5	6.15-sku8
@@ -139,3 +136,36 @@ Sample Output
     sg	sku2	6.15-sku1	6.15-sku3
     sg	sku3	9.68-sku1	6.15-sku2
     sg	sku4	3.01-sku1
+
+vtd
+---
+
+    $ ./raptor sg 3 vtd
+    $ cat Result/vtd/Raptor_sg.csv 
+    sg	sku5	9.45-sku6	9.45-sku8
+    sg	sku6	
+    sg	sku7	9.45-sku6	9.45-sku8
+    sg	sku8	9.45-sku5	9.45-sku7
+    sg	sku9	9.45-sku7	9.45-sku8
+    sg	sku0	15.82-sku1	15.00-sku3	11.76-sku4
+    sg	sku1	15.82-sku4	15.00-sku3	4.56-sku2
+    sg	sku2	15.00-sku4	9.45-sku3	4.56-sku1
+    sg	sku3	15.00-sku1	9.45-sku2
+    sg	sku4	9.68-sku1	9.45-sku3
+
+joining_raptors
+---------------
+
+    $ ./Joining-Raptors sg 3 Result/joined.csv Result/bayes/Raptor_sg.csv Result/vtd/Raptor_sg.csv Result/original/Raptor_sg.csv 
+
+    $ cat Result/joined.csv 
+    sg	sku5	22.98-sku8	9.45-sku6
+    sg	sku6
+    sg	sku7	22.98-sku8	9.45-sku6
+    sg	sku8	22.98-sku5	22.98-sku7
+    sg	sku9	9.45-sku7	9.45-sku8
+    sg	sku0	42.68-sku3	38.15-sku1	19.36-sku2
+    sg	sku1	38.79-sku3	23.48-sku4	15.99-sku2
+    sg	sku2	22.66-sku3	15.99-sku1	15.60-sku4
+    sg	sku3	38.79-sku1	22.66-sku2	0.60-sku4
+    sg	sku4	17.34-sku1	10.05-sku3	0.60-sku2
