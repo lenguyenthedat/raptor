@@ -2,7 +2,8 @@
 
 module Main where 
 
-import NLP.Scores
+--  sudo cabal install nlp-scores
+import NLP.Scores 
 import Data.List.Split
 import Data.List
 import Data.Maybe
@@ -11,11 +12,11 @@ import System.IO
 import System.Environment
 
 main = do
-  	args <- getArgs
+		args <- getArgs
 		let country = args !! 0 
 		let sku_count = 1 + (read (args !! 1) :: Int)
 		let resultFile  = args !! 2 
-		let raptorFiles = drop 3 args -- all the remaining are raptors to join, put as much as you want
+		let raptorFiles = drop 3 args -- all the remaining arguments are raptors to join, put as many files as you want
 		raptors <- sequence $ map readFile raptorFiles
 		let raptorsCountry = map (raptorForCountry country) raptors
 		let raptorCombinedCountry = joinList raptorsCountry
@@ -43,7 +44,7 @@ tuple_to_scoreSKU (f,s) = printf "%.2f" (f :: Float) ++ "-" ++ s
 					
 raptorForCountry :: String -> String -> [[String]]
 raptorForCountry country raptor = map tail $ filter (\x -> x!!0 == country ) (map (splitOn "\t") (lines raptor))
---raptorForCountry country raptor = map tail $ filter (\x -> x!!0 == country ) (map (splitOn "\t") (tail $ lines raptor)) -- for the case when Raptors CSV files start with header
+--raptorForCountry country raptor = map tail $ filter (\x -> x!!0 == country ) (map (splitOn "\t") (tail $ lines raptor)) -- for when Raptors CSV files start with header
 
 toRaptor = map toRaptorByLines 
 
