@@ -109,6 +109,7 @@ original
 --------
 
     $ ./raptor sg 3 original
+    
     $ cat Result/original/Raptor_sg.csv 
     sg	sku5	7.38-sku8
     sg	sku6	
@@ -125,6 +126,7 @@ bayes
 -----
 
     $ ./raptor sg 3 bayes
+    
     $ cat Result/bayes/Raptor_sg.csv 
     sg	sku5	6.15-sku8
     sg	sku6	
@@ -141,6 +143,7 @@ vtd
 ---
 
     $ ./raptor sg 3 vtd
+    
     $ cat Result/vtd/Raptor_sg.csv 
     sg	sku5	9.45-sku6	9.45-sku8
     sg	sku6	
@@ -156,7 +159,12 @@ vtd
 joining_raptors
 ---------------
 
-    $ ./Joining-Raptors sg 3 Result/joined.csv Result/bayes/Raptor_sg.csv Result/vtd/Raptor_sg.csv Result/original/Raptor_sg.csv 
+    $ file1=Result/bayes/Raptor_sg.csv
+    $ file2=Result/vtd/Raptor_sg.csv
+    $ file3=Result/original/Raptor_sg.csv
+    $ result=Result/joined.csv
+    
+    $ ./Joining-Raptors sg 3 $result $file1 $file2 $file3
 
     $ cat Result/joined.csv 
     sg	sku5	22.98-sku8	9.45-sku6
