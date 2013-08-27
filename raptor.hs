@@ -48,7 +48,7 @@ main = do
 		           hClose outh
 		"vtd" -> hPutStrLn outh (toStr country (apply_vtd_jaccard size sku_src_male sku_dst_male purchase_map view_map)) >>
 		         hPutStrLn outh (toStr country (apply_vtd_jaccard size sku_src_female sku_dst_female purchase_map view_map)) >>
-				 hClose outh
+			 hClose outh
 
 -- original
 apply_jaccard :: Int -> [SKU] -> [SKU] -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> [(SKU,[(SKU,Float)])]
@@ -85,14 +85,14 @@ bayes_jaccard :: SKU -> SKU -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> F
 bayes_jaccard sku1 sku2 purchase_map view_map 
 	| floatLen (intersect (safeGetValue purchase_map sku1) (safeGetValue purchase_map sku2)) == 0 = 0 
 	| otherwise = let purchase_sku1 = safeGetValue purchase_map sku1 in
-				  let purchase_sku2 = safeGetValue purchase_map sku2 in
-				  let view_sku1     = safeGetValue view_map sku1 in
-				  let view_sku2     = safeGetValue view_map sku2 in
-				  let ints_view     = floatLen (intersect view_sku1 view_sku2) in
-				  let ints_purchase = floatLen (intersect purchase_sku1 purchase_sku2) in
-				  let ints_purchase1_view2 = floatLen (intersect purchase_sku1 view_sku2) in
-				  let ints_purchase2_view1 = floatLen (intersect purchase_sku2 view_sku1) in
-				  wilson95 ints_purchase (ints_purchase1_view2 + ints_purchase2_view1)
+		      let purchase_sku2 = safeGetValue purchase_map sku2 in
+		      let view_sku1     = safeGetValue view_map sku1 in
+		      let view_sku2     = safeGetValue view_map sku2 in
+		      let ints_view     = floatLen (intersect view_sku1 view_sku2) in
+		      let ints_purchase = floatLen (intersect purchase_sku1 purchase_sku2) in
+		      let ints_purchase1_view2 = floatLen (intersect purchase_sku1 view_sku2) in
+		      let ints_purchase2_view1 = floatLen (intersect purchase_sku2 view_sku1) in
+		      wilson95 ints_purchase (ints_purchase1_view2 + ints_purchase2_view1)
 
 -- vtd
 apply_vtd_jaccard :: Int -> [SKU] -> [SKU] -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> [(SKU,[(SKU,Float)])]
@@ -105,12 +105,12 @@ apply_vtd_jaccard_for_sku size sku1 sku_src sku_dst purchase_map view_map =
 	[ (sku2,(vtd_jaccard sku1 sku2 purchase_map view_map )) | sku2 <- filter_related_sku_vtd sku1 sku_dst purchase_map view_map ]
 
 vtd_jaccard :: SKU -> SKU -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> Float
-vtd_jaccard sku1 sku2 purchase_map view_map = let view_sku1 	  = safeGetValue view_map sku1 in
-												let view_sku2 	  = safeGetValue view_map sku2 in
-												let purchase_sku2 = safeGetValue purchase_map sku2 in
-				 							    let ints_purchase2_view1 = floatLen (intersect purchase_sku2 view_sku1) in
-				 							    let ints_view            = floatLen (intersect view_sku1 view_sku2) in
-				 							    wilson95 ints_purchase2_view1 ints_view
+vtd_jaccard sku1 sku2 purchase_map view_map = let view_sku1            = safeGetValue view_map sku1 in
+					      let view_sku2            = safeGetValue view_map sku2 in
+					      let purchase_sku2        = safeGetValue purchase_map sku2 in
+					      let ints_purchase2_view1 = floatLen (intersect purchase_sku2 view_sku1) in
+					      let ints_view            = floatLen (intersect view_sku1 view_sku2) in
+					      wilson95 ints_purchase2_view1 ints_view
 
 -- auxilary functions
 -- given an SKU, a list of SKUs to be fitered, a purchase_map
@@ -118,19 +118,19 @@ vtd_jaccard sku1 sku2 purchase_map view_map = let view_sku1 	  = safeGetValue vi
 filter_related_sku :: SKU -> [SKU] -> (Map.Map SKU [USER]) ->[SKU]
 filter_related_sku sku sku_dst purchase_map = 
 	filter (\other_sku -> other_sku /= sku && 
-					       length (intersect (safeGetValue purchase_map other_sku) (safeGetValue purchase_map sku)) > 0) sku_dst
+		length (intersect (safeGetValue purchase_map other_sku) (safeGetValue purchase_map sku)) > 0) sku_dst
 
 filter_related_sku_vtd :: SKU -> [SKU] -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) ->[SKU]
 filter_related_sku_vtd sku sku_dst purchase_map view_map = 
 	filter (\other_sku -> other_sku /= sku && 
-					       length (intersect (safeGetValue purchase_map other_sku) (safeGetValue view_map sku)) > 0) sku_dst
+		length (intersect (safeGetValue purchase_map other_sku) (safeGetValue view_map sku)) > 0) sku_dst
 
 floatLen :: [String] -> Float
 floatLen s =  fromIntegral $ length $ s
 
 safeGetValue :: Ord a => (Map.Map a [a]) -> a -> [a]
 safeGetValue purchase_map sku | Map.member sku purchase_map = purchase_map Map.! sku
-						   	  | otherwise = []
+			      | otherwise = []
 
 toMap :: String -> Map.Map SKU [USER]
 toMap input = Map.fromList $ map (\row -> (row !! 0, splitOn " " (row !!1))) $ toDataFrame input
