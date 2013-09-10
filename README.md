@@ -23,7 +23,7 @@ http://www.evanmiller.org/how-not-to-sort-by-average-rating.html
 Sample Input
 ---------
 
-    $ cat Data/VTD_view_sg.csv 
+    $ cat Test/Data/VTD_view_sg.csv 
     sku0	cust1 cust2 cust3 cust4
     sku1	cust1 cust2 cust3 cust4 cust5
     sku2	cust2 cust4 cust5
@@ -35,7 +35,7 @@ Sample Input
     sku8	cust1 cust4
     sku9	cust2 cust4
 
-    $ cat Data/VTD_cart_sg.csv 
+    $ cat Test/Data/VTD_cart_sg.csv 
     sku0	cust1 cust2
     sku1	cust1 cust2 cust3
     sku2	cust2 cust4
@@ -47,7 +47,7 @@ Sample Input
     sku8	cust1 cust4
     sku9	cust2
 
-    $ cat Data/VTD_purchased_sg.csv 
+    $ cat Test/Data/VTD_purchased_sg.csv 
     sku0	cust1 cust2
     sku1	cust1 cust2 cust3
     sku2	cust2
@@ -59,21 +59,21 @@ Sample Input
     sku8	cust1 cust4
     sku9	cust2
 
-    $ cat Data/sku_male_sg.csv 
+    $ cat Test/Data/sku_male_sg.csv 
     sku5
     sku6
     sku7
     sku8
     sku9
 
-    $ cat Data/sku_female_sg.csv 
+    $ cat Test/Data/sku_female_sg.csv 
     sku0
     sku1
     sku2
     sku3
     sku4
 
-    $ cat Data/instock_skus_sg.csv 
+    $ cat Test/Data/instock_skus_sg.csv 
     sku0
     sku1
     sku2
@@ -84,7 +84,7 @@ Sample Input
     sku7
     sku8
 
-    $ cat Data/valid_skus_sg.csv 
+    $ cat Test/Data/valid_skus_sg.csv 
     sku1
     sku2
     sku3
@@ -108,9 +108,9 @@ Sample Output
 original
 --------
 
-    $ ./raptor sg 3 original <source_folder>
+    $ ./raptor sg 3 original Test/
     
-    $ cat Result/original/Raptor_sg.csv 
+    $ cat Test/Result/original/Raptor_sg.csv 
     sg	sku5	7.38-sku8
     sg	sku6	
     sg	sku7	7.38-sku8
@@ -125,9 +125,9 @@ original
 bayes
 -----
 
-    $ ./raptor sg 3 bayes <source_folder>
+    $ ./raptor sg 3 bayes Test/
     
-    $ cat Result/bayes/Raptor_sg.csv 
+    $ cat Test/Result/bayes/Raptor_sg.csv 
     sg	sku5	6.15-sku8
     sg	sku6	
     sg	sku7	6.15-sku8
@@ -142,9 +142,9 @@ bayes
 vtd
 ---
 
-    $ ./raptor sg 3 vtd <source_folder>
+    $ ./raptor sg 3 vtd Test/
     
-    $ cat Result/vtd/Raptor_sg.csv 
+    $ cat Test/Result/vtd/Raptor_sg.csv 
     sg	sku5	9.45-sku6	9.45-sku8
     sg	sku6	
     sg	sku7	9.45-sku6	9.45-sku8
@@ -159,14 +159,14 @@ vtd
 joining_raptors
 ---------------
 
-    $ file1=Result/bayes/Raptor_sg.csv
-    $ file2=Result/vtd/Raptor_sg.csv
-    $ file3=Result/original/Raptor_sg.csv
-    $ result=Result/joined.csv
+    $ file1=Test/Result/bayes/Raptor_sg.csv
+    $ file2=Test/Result/vtd/Raptor_sg.csv
+    $ file3=Test/Result/original/Raptor_sg.csv
+    $ result=Test/Result/joined.csv
     
     $ ./Joining-Raptors sg 3 $result $file1 $file2 $file3
 
-    $ cat Result/joined.csv 
+    $ cat Test/Result/joined.csv 
     sg	sku5	22.98-sku8	9.45-sku6
     sg	sku6
     sg	sku7	22.98-sku8	9.45-sku6
