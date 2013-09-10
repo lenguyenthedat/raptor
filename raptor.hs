@@ -20,13 +20,14 @@ main = do
         let country        = args !! 0
         let size           = read $ args !! 1
         let algorithm      = args !! 2
-        purchase           <- readFile $ "Data/VTD_purchased_" ++ country ++ ".csv"    -- SKU - USERS has purchased
-        view               <- readFile $ "Data/VTD_view_" ++ country ++ ".csv"         -- SKU - USERS has viewed
-        cart               <- readFile $ "Data/VTD_cart_" ++ country ++ ".csv"         -- SKU - USERS has put-in-cart
-        valid              <- readFile $ "Data/valid_skus_" ++ country ++ ".csv"       -- SKUs that has enough stock to be in the list of recommendation
-        instock            <- readFile $ "Data/instock_skus_" ++ country ++ ".csv"     -- SKUs that has stock to be calculated
-        male               <- readFile $ "Data/sku_male_" ++ country ++ ".csv"         -- SKUs that is for male
-        female             <- readFile $ "Data/sku_female_" ++ country ++ ".csv"       -- SKUs that is for female
+        let home      = args !! 3
+        purchase           <- readFile $ home ++ "/Data/VTD_purchased_" ++ country ++ ".csv"    -- SKU - USERS has purchased
+        view               <- readFile $ home ++ "/Data/VTD_view_" ++ country ++ ".csv"         -- SKU - USERS has viewed
+        cart               <- readFile $ home ++ "/Data/VTD_cart_" ++ country ++ ".csv"         -- SKU - USERS has put-in-cart
+        valid              <- readFile $ home ++ "/Data/valid_skus_" ++ country ++ ".csv"       -- SKUs that has enough stock to be in the list of recommendation
+        instock            <- readFile $ home ++ "/Data/instock_skus_" ++ country ++ ".csv"     -- SKUs that has stock to be calculated
+        male               <- readFile $ home ++ "/Data/sku_male_" ++ country ++ ".csv"         -- SKUs that is for male
+        female             <- readFile $ home ++ "/Data/sku_female_" ++ country ++ ".csv"       -- SKUs that is for female
         let sku_src        = indexAsList instock
         let sku_dst        = indexAsList valid
         let sku_male       = indexAsList male
@@ -38,7 +39,7 @@ main = do
         let purchase_map   = toMap purchase
         let view_map       = toMap view
         let cart_map       = toMap cart
-        outh <- openFile ("Result/" ++ algorithm ++ "/Raptor_" ++ country ++ ".csv") WriteMode
+        outh <- openFile (home ++ "/Result/" ++ algorithm ++ "/Raptor_" ++ country ++ ".csv") WriteMode
         case algorithm of
             "original" -> hPutStrLn outh (toStr country (apply_jaccard size sku_src_male sku_dst_male purchase_map cart_map)) >>
                           hPutStrLn outh (toStr country (apply_jaccard size sku_src_female sku_dst_female purchase_map cart_map)) >>
@@ -167,4 +168,3 @@ wilson95 positive negative = 100 * ((positive + 1.9208) / (positive + negative) 
 -- 8.221716570901549
 -- > wilson95 100 200
 -- 28.239255979025565
-
