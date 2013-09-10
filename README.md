@@ -108,7 +108,7 @@ Sample Output
 original
 --------
 
-    $ ./raptor sg 3 original
+    $ ./raptor sg 3 original <source_folder>
     
     $ cat Result/original/Raptor_sg.csv 
     sg	sku5	7.38-sku8
@@ -125,7 +125,7 @@ original
 bayes
 -----
 
-    $ ./raptor sg 3 bayes
+    $ ./raptor sg 3 bayes <source_folder>
     
     $ cat Result/bayes/Raptor_sg.csv 
     sg	sku5	6.15-sku8
@@ -142,7 +142,7 @@ bayes
 vtd
 ---
 
-    $ ./raptor sg 3 vtd
+    $ ./raptor sg 3 vtd <source_folder>
     
     $ cat Result/vtd/Raptor_sg.csv 
     sg	sku5	9.45-sku6	9.45-sku8
