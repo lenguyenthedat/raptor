@@ -97,6 +97,8 @@ Sample Input
 Sample Output
 -----------
     
+Build with ghc:
+
     $ ghc raptor.hs
     [1 of 1] Compiling Main             ( raptor.hs, raptor.o )
     Linking raptor ...
@@ -104,6 +106,27 @@ Sample Output
     $ ghc Joining-Raptors.hs 
     [1 of 1] Compiling Main             ( Joining-Raptors.hs, Joining-Raptors.o )
     Linking Joining-Raptors ...
+
+Build with cabal-dev:
+
+    $ cabal-dev install
+    Resolving dependencies...
+    Configuring raptor-0.1.0.0...
+    Building raptor-0.1.0.0...
+    Preprocessing executable 'raptor' for raptor-0.1.0.0...
+    Preprocessing executable 'joining-raptors' for raptor-0.1.0.0...
+    Preprocessing executable 'hamming' for raptor-0.1.0.0...
+    Warning: No documentation was generated as this package does not contain a
+    library. Perhaps you want to use the --executables flag.
+    Installing executable(s) in /Users/datle/GitHub/cabinet/Raptor/cabal-dev//bin
+    Installed raptor-0.1.0.0
+    Warning: could not create symlinks in /Users/datle/Library/Haskell/bin for
+    joining-raptors, hamming, raptor because the files exist there already and are
+    not managed by cabal. You can create symlinks for these executables manually
+    if you wish. The executable files have been installed at
+    /Users/xxx/GitHub/cabinet/Raptor/cabal-dev/bin/joining-raptors,
+    /Users/xxx/GitHub/cabinet/Raptor/cabal-dev/bin/hamming,
+    /Users/xxx/GitHub/cabinet/Raptor/cabal-dev/bin/raptor
 
 original
 --------
