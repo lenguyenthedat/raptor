@@ -18,20 +18,20 @@ cabal-version:       >=1.8
 executable raptor
   main-is:             raptor.hs
   -- other-modules:       
-  build-depends:       base >=4.6,
+  build-depends:       base >=4,
                        containers,
                        split
 
 executable hamming
   main-is:             hamming.hs
   -- other-modules:       
-  build-depends:       base >=4.6,
+  build-depends:       base >=4,
                        array,
                        split
 
 executable joining-raptors
   main-is:             joining-raptors.hs
   -- other-modules:       
-  build-depends:       base >=4.6,
+  build-depends:       base >=4,
                        split,
                        nlp-scores
