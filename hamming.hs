@@ -4,7 +4,6 @@
 -- Output a smart mapping of SKUs to their similar SKUs (which has more stock)
 
 module Main where 
-
 import Data.List.Split
 import Data.List
 import System.IO
@@ -67,6 +66,21 @@ levenshteinGroup (row:rows) = let firstgroup = levenshteinRow row rows
                               in firstgroup : (levenshteinGroup (minus rows firstgroup))
 
 
+--levenshteinRow :: Row -> DataFrame -> DataFrame
+--levenshteinRow row df = row : (
+--                              --filter (\x -> levenshtein (row!!0) (x!!0) < 3 ) (
+--                              --filter (\x -> levenshtein (row!!1) (x!!1) < 3 ) (                                
+--                              --filter (\x -> levenshtein (row!!3) (x!!3) < 3 ) (                                
+--                              --filter (\x -> levenshtein (row!!4) (x!!4) < 3 ) (                                
+--                              filter (\x -> (row!!2)==(x!!2) && (row!!5)==(x!!5) && (row!!6)==(x!!6))
+--                              df)--))))
+
+--levenshteinGroup :: DataFrame -> [DataFrame]
+--levenshteinGroup [] = []
+--levenshteinGroup [row] = [[row]]
+--levenshteinGroup (row:rows) = let firstgroup = levenshteinRow row rows 
+--                              in firstgroup : (levenshteinGroup (minus rows firstgroup))
+
 
 minus :: Ord a => [a] -> [a] -> [a]
 minus [] _ = []
@@ -77,9 +91,7 @@ minus l1@(x:xs) l2@(y:ys)
     | otherwise = minus xs l2
 
 main = do
-      args <- getArgs
-      let country = args !! 0 
-      metadata <- readFile $ "Data/sku_metadata_" + country + ".csv"
+      metadata <- readFile $ "Data/sku_metadata_sg.csv"
       let grouped = concat $ map levenshteinGroup $ filterBySubcatCatBrandGroup $ sort $ tail $ toDataFrame metadata
       outh  <- openFile ("Data/grouped.csv") WriteMode
       hPutStrLn outh $ intercalate "\n" $ map (\df -> intercalate " " (map (\row -> row !! 0) df)) grouped
