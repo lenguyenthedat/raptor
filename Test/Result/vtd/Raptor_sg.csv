@@ -3,7 +3,7 @@ sg	sku6
 sg	sku7	9.45-sku6	9.45-sku8
 sg	sku8	9.45-sku5	9.45-sku7
 sg	sku9	9.45-sku7	9.45-sku8
-sg	sku0	15.82-sku1	15.00-sku3	11.76-sku4	6.15-sku2
+sg	sku0	15.82-sku1	15.00-sku3	11.76-sku4
 sg	sku1	15.82-sku4	15.00-sku3	4.56-sku2
 sg	sku2	15.00-sku4	9.45-sku3	4.56-sku1
 sg	sku3	15.00-sku1	9.45-sku2
