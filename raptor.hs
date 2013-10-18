@@ -2,20 +2,19 @@
 module Main where
 
 import qualified Data.ByteString.Lazy.Char8 as B
-import qualified Data.ByteString.Char8 as BS
 import qualified Data.Set as DS
 import qualified Data.HashMap.Strict as Map
 
 import Data.List
-import Data.Char
 import System.IO
-import System.Environment
+import System.Environment (getArgs)
 import Text.Printf (printf)
 import Data.Ord (comparing)
 
+data Algorithm = ORIG | BAYES | VTD
+
 type DataFrame    = [[B.ByteString]]
 type SKU          = B.ByteString
-type Algorithm    = String
 type SKU_Distance = B.ByteString
 type USER         = B.ByteString
 type ItemSize     = Int
@@ -36,9 +35,9 @@ isPairValid algorithm purchase_map cart_map view_map sku_pair =
   let sku1 = fst sku_pair
       sku2 = snd sku_pair
       set_logic = case algorithm of
-                        "original" -> not . DS.null $ DS.intersection (safeGetValue cart_map sku2) (safeGetValue cart_map sku1)
-                        "bayes" -> not . DS.null $ DS.intersection (safeGetValue purchase_map sku2) (safeGetValue purchase_map sku1)
-                        "vtd" -> not . DS.null $ DS.intersection (safeGetValue purchase_map sku2) (safeGetValue view_map sku1)
+                        ORIG -> not . DS.null $ DS.intersection (safeGetValue cart_map sku2) (safeGetValue cart_map sku1)
+                        BAYES -> not . DS.null $ DS.intersection (safeGetValue purchase_map sku2) (safeGetValue purchase_map sku1)
+                        VTD -> not . DS.null $ DS.intersection (safeGetValue purchase_map sku2) (safeGetValue view_map sku1)
   in sku1 /= sku2 && set_logic
 
 
@@ -62,10 +61,10 @@ calcJaccardScore algorithm purchase_map cart_map view_map sku_pair =
       ints_purchase1_view2 = floatSize $ DS.intersection (fst purchase_sku_pair) (snd view_sku_pair)
       ints_purchase2_view1 = floatSize $ DS.intersection (snd purchase_sku_pair) (fst view_sku_pair)
   in case algorithm of
-        "original" -> (wilson95 ints_purchase ((floatSize (fst purchase_sku_pair)) + (floatSize (snd purchase_sku_pair)) - ints_purchase)) 
+        ORIG -> (wilson95 ints_purchase ((floatSize (fst purchase_sku_pair)) + (floatSize (snd purchase_sku_pair)) - ints_purchase)) 
                       + 0.2 * (wilson95 ints_cart ((floatSize (fst cart_sku_pair)) + (floatSize (snd cart_sku_pair)) - ints_cart))
-        "bayes" -> wilson95 ints_purchase (ints_purchase1_view2 + ints_purchase2_view1)
-        "vtd" -> wilson95 ints_purchase2_view1 ints_view
+        BAYES -> wilson95 ints_purchase (ints_purchase1_view2 + ints_purchase2_view1)
+        VTD -> wilson95 ints_purchase2_view1 ints_view
   where floatSize = fromIntegral . DS.size
 
 
@@ -135,7 +134,7 @@ processArgs xs | length xs == 4 = (xs !! 0, read (xs !! 1), xs !! 2, xs !! 3)
 
 
 toStr :: String -> [[((SKU, SKU), Float)]] -> String
-toStr country results = unlines [intercalate "\t" $ [(B.unpack . fst . fst . head) result] ++ (map (\((a, b), score) -> (printf "%.2f" score :: String) ++ "-" ++ (B.unpack b)) result) | result <- results]
+toStr country results = unlines [intercalate "\t" $ [country, (B.unpack . fst . fst . head) result] ++ (map (\((_, b), score) -> (printf "%.2f" score :: String) ++ "-" ++ (B.unpack b)) result) | result <- results]
 
 
 main :: IO ()
@@ -150,9 +149,15 @@ main = do
             sku_dst_female = DS.intersection sku_female sku_dst
             sku_src_male = DS.intersection sku_male sku_src
             sku_src_female = DS.intersection sku_female sku_src
+            algorithm_type = case algorithm of 
+                               "original" -> ORIG
+                               "bayes" -> BAYES
+                               "vtd" -> VTD
+                               _ -> error "Unknown algorithm type"
+
         outh <- openFile output_filepath WriteMode
-        let male_result = applyJaccard algorithm size sku_src_male sku_dst_male purchase_map cart_map view_map
-            female_result = applyJaccard algorithm size sku_src_female sku_dst_female purchase_map cart_map view_map
+        let male_result = applyJaccard algorithm_type size sku_src_male sku_dst_male purchase_map cart_map view_map
+            female_result = applyJaccard algorithm_type size sku_src_female sku_dst_female purchase_map cart_map view_map
         hPutStrLn outh (toStr country male_result)
         hPutStrLn outh (toStr country female_result)
         hClose outh
