@@ -20,6 +20,8 @@ executable raptor
   -- other-modules:       
   build-depends:       base >=4,
                        containers,
+                       unordered-containers >= 0.2.3.3,
+                       bytestring,
                        split
 
 executable hamming

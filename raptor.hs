@@ -1,6 +1,11 @@
 -- Copyright 2013 Dat Le <dat.le@zalora.com>
 
-module Main where 
+module Main where
+
+import qualified Data.ByteString.Char8 as B
+import qualified Data.Set as DS
+import qualified Data.HashMap.Strict as Map
+
 import Data.List.Split
 import Data.List
 import Data.Char
@@ -8,7 +13,6 @@ import System.IO
 import System.Environment
 import Text.Printf
 import Data.Ord
-import qualified Data.Map as Map
 
 type DataFrame    = [[String]]
 type Row          = [String]
@@ -16,109 +20,122 @@ type SKU          = String
 type Algorithm    = String
 type SKU_Distance = String
 type USER         = String
+type ItemSize     = Int
+type SKU_USER_Map = Map.HashMap SKU (DS.Set USER)
+type Score = Float
 
-main = do
-        args               <- getArgs
-        let (country, size, algorithm, home) = processArgs args
-        purchase           <- readFile $ home ++ "/Data/VTD_purchased_" ++ country ++ ".csv"    -- SKU - USERS has purchased
-        view               <- readFile $ home ++ "/Data/VTD_view_"      ++ country ++ ".csv"    -- SKU - USERS has viewed
-        cart               <- readFile $ home ++ "/Data/VTD_cart_"      ++ country ++ ".csv"    -- SKU - USERS has put-in-cart
-        valid              <- readFile $ home ++ "/Data/valid_skus_"    ++ country ++ ".csv"    -- SKUs that has enough stock to be in the list of recommendation
-        instock            <- readFile $ home ++ "/Data/instock_skus_"  ++ country ++ ".csv"    -- SKUs that has stock to be calculated
-        male               <- readFile $ home ++ "/Data/sku_male_"      ++ country ++ ".csv"    -- SKUs that is for male
-        female             <- readFile $ home ++ "/Data/sku_female_"    ++ country ++ ".csv"    -- SKUs that is for female
-        let sku_src        = indexAsList instock
-        let sku_dst        = indexAsList valid
-        let sku_male       = indexAsList male
-        let sku_female     = indexAsList female
-        let sku_dst_male   = intersect sku_male sku_dst
-        let sku_dst_female = intersect sku_female sku_dst
-        let sku_src_male   = intersect sku_male sku_src
-        let sku_src_female = intersect sku_female sku_src
-        let purchase_map   = toMap purchase
-        let view_map       = toMap view
-        let cart_map       = toMap cart
-        outh <- openFile (home ++ "/Result/" ++ algorithm ++ "/Raptor_" ++ country ++ ".csv") WriteMode
-        hPutStrLn outh (toStr country (apply_jaccard algorithm size sku_src_male   sku_dst_male   purchase_map cart_map view_map))
-        hPutStrLn outh (toStr country (apply_jaccard algorithm size sku_src_female sku_dst_female purchase_map cart_map view_map))
-        hClose outh
 
-processArgs :: [String] -> (String,Int,String, String) -- country, size, algorithm, home folder
-processArgs xs | length xs == 4 = (xs !! 0, read (xs !! 1), xs !! 2, xs !! 3)
-               | otherwise      = ("sg"   , 3             , "vtd"  , "./Test") -- Testing / Default value
+buildSetsFromFile :: [FilePath] -> IO [DS.Set SKU]
+buildSetsFromFile files = mapM (\f -> return $ DS.fromList $ indexAsList f) files
 
--- original
-apply_jaccard :: Algorithm -> Int -> [SKU] -> [SKU] -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> [(SKU,[(SKU,Float)])]
-apply_jaccard algorithm size sku_src sku_dst purchase_map cart_map view_map = 
-    [(sku1, apply_jaccard_for_sku algorithm size sku1 sku_src sku_dst purchase_map cart_map view_map) | sku1 <- sku_src]
 
-apply_jaccard_for_sku :: Algorithm -> Int -> SKU -> [SKU] -> [SKU] -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> [(SKU,Float)]
-apply_jaccard_for_sku algorithm size sku1 sku_src sku_dst purchase_map cart_map view_map = 
-    rankJaccardScores size [(sku2,(calc_jaccard_score algorithm sku1 sku2 purchase_map cart_map view_map)) | sku2 <- filter_related_sku algorithm sku1 sku_dst purchase_map cart_map view_map]
+buildMapsFromFile :: [FilePath] -> IO ([SKU_USER_Map])
+buildMapsFromFile files = mapM (\f -> return $ toMap f) files
 
-calc_jaccard_score :: Algorithm -> SKU -> SKU -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> Float
-calc_jaccard_score algorithm sku1 sku2 purchase_map cart_map view_map = 
-    let view_sku1            = safeGetValue view_map sku1 in
-    let view_sku2            = safeGetValue view_map sku2 in    
-    let purchase_sku1        = safeGetValue purchase_map sku1 in
-    let purchase_sku2        = safeGetValue purchase_map sku2 in
-    let cart_sku1            = safeGetValue cart_map sku1 in
-    let cart_sku2            = safeGetValue cart_map sku2 in
-    let ints_cart            = floatLen (intersect cart_sku1 cart_sku2) in
-    let ints_view            = floatLen (intersect view_sku1 view_sku2) in
-    let ints_purchase        = floatLen (intersect purchase_sku1 purchase_sku2) in
-    let ints_purchase1_view2 = floatLen (intersect purchase_sku1 view_sku2) in
-    let ints_purchase2_view1 = floatLen (intersect purchase_sku2 view_sku1) in   
-    case algorithm of
-      "original" -> (wilson95 ints_purchase (floatLen purchase_sku1 + floatLen purchase_sku2 - ints_purchase)) 
-                    + 0.2 * (wilson95 ints_cart (floatLen cart_sku1 + floatLen cart_sku2 - ints_cart)) 
-      "bayes"    -> wilson95 ints_purchase (ints_purchase1_view2 + ints_purchase2_view1)
-      "vtd"      -> wilson95 ints_purchase2_view1 ints_view
 
--- given an SKU, a list of SKUs to be fitered, a purchase_map
--- output list of SKUs that has at least one or more purchases together with the given SKU
-filter_related_sku :: Algorithm -> SKU -> [SKU] -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) -> (Map.Map SKU [USER]) ->[SKU]
-filter_related_sku algorithm sku sku_dst purchase_map cart_map view_map =
-    case algorithm of
-      "original" -> filter (\other_sku -> other_sku /= sku && 
-                           length (intersect (safeGetValue cart_map     other_sku) (safeGetValue cart_map     sku)) > 0) sku_dst
-      "bayes"    -> filter (\other_sku -> other_sku /= sku && 
-                           length (intersect (safeGetValue purchase_map other_sku) (safeGetValue purchase_map sku)) > 0) sku_dst
-      "vtd"      -> filter (\other_sku -> other_sku /= sku && 
-                           length (intersect (safeGetValue purchase_map other_sku) (safeGetValue view_map     sku)) > 0) sku_dst
--- auxilary functions
-
-rankJaccardScores :: Int -> [(SKU, Float)] ->  [(SKU, Float)]
-rankJaccardScores size scores = take size $ sortBy (flip (comparing snd)) $ scores
--- > rankJaccardScores 3 [("SKU1",5), ("SKU3",1), ("SKU0",3), ("SKU2",4)]
--- [("SKU1",5),("SKU2",4),("SKU0",3)]
-
-floatLen :: [String] -> Float
-floatLen s =  fromIntegral $ length $ s
-
-safeGetValue :: Ord a => (Map.Map a [a]) -> a -> [a]
-safeGetValue purchase_map sku | Map.member sku purchase_map = purchase_map Map.! sku
-                              | otherwise = []
-
-toMap :: String -> Map.Map SKU [USER]
-toMap input = Map.fromList $ map (\row -> (row !! 0, splitOn " " (row !!1))) $ toDataFrame input
+toMap :: String -> SKU_USER_Map
+toMap input = Map.fromList $ map (\row -> (row !! 0, DS.fromList $ splitOn " " (row !!1))) $ toDataFrame input
 -- > toMap "A\t1 2 3 4\nB\t1 2 5 6"
 -- fromList [("A",["1","2","3","4"]),("B",["1","2","5","6"])]
+
 
 indexAsList :: String -> [String]
 indexAsList input = map (\row -> row !! 0) $ toDataFrame input
 -- > indexAsList "1\t2\t3\n4\t5\t6\n7\t8\t9"
 -- ["1","4","7"]
 
+
 toDataFrame :: String -> DataFrame
 toDataFrame input = map (splitOn "\t") (lines input)
 -- > toDataFrame "a\tb\n1\t2"
 -- [["a","b"],["1","2"]]
 
-toStr :: String -> [(SKU,[(SKU,Float)])] -> String
-toStr country result = intercalate "\n" $ map (\(sku,skus) -> country ++ "\t" ++ sku ++ "\t" ++ intercalate "\t" (map (\(sku,score) -> (printf "%.2f" score :: String) ++ "-" ++ sku) skus)) result 
--- > toStr "SG" [("sku1",[("sku2",2.1),("sku3",1.2),("sku4",1.0)]),("sku2",[("sku1",2.2)]),("sku3",[("sku4",1)])]
--- "SG\tsku1\t2.10-sku2\t1.20-sku3\t1.00-sku4\nSG\tsku2\t2.20-sku1\nSG\tsku3\t1.00-sku4"
+
+-- purchase, view, cart, valid, instock, male, female
+getDataDirectories :: String -> String -> [FilePath]
+getDataDirectories home country =
+  let file_extension = ".csv"
+      data_directory_name = "/Data"
+      data_types = ["/VTD_purchased_", "/VTD_view_", "/VTD_cart_", "/valid_skus_", "/instock_skus_", "/sku_male_", "/sku_female_"]
+  in map (\t -> concat [home, data_directory_name, t, country, file_extension]) data_types
+
+
+getOutputFilePath :: String -> String -> String -> FilePath
+getOutputFilePath home algorithm country = concat [home, "/Result/", algorithm, "/Raptor_", country, ".csv"]
+
+
+processArgs :: [String] -> (String,Int,String, String) -- country, size, algorithm, home folder
+processArgs xs | length xs == 4 = (xs !! 0, read (xs !! 1), xs !! 2, xs !! 3)
+               | otherwise      = ("sg"   , 3             , "vtd"  , "./Test") -- Testing / Default value
+
+toStr :: String -> [[((SKU, SKU), Float)]] -> String
+toStr country results = unlines [intercalate "\t" $ [(fst . fst . head) result] ++ (map (\((a, b), score) -> (printf "%.2f" score :: String) ++ "-" ++ b) result) | result <- results]
+
+main :: IO ()
+main = do
+        args  <- getArgs
+        let (country, size, algorithm, home) = processArgs args
+            data_directories = getDataDirectories home country
+            output_filepath = getOutputFilePath home algorithm country
+        (purchase_map:view_map:cart_map:_) <- buildMapsFromFile (take 4 data_directories)
+        (sku_dst:sku_src:sku_male:sku_female:_) <- buildSetsFromFile (take 4 $ drop 3 data_directories)
+        let sku_dst_male = DS.intersection sku_male sku_dst
+            sku_dst_female = DS.intersection sku_female sku_dst
+            sku_src_male = DS.intersection sku_male sku_src
+            sku_src_female = DS.intersection sku_female sku_src
+        outh <- openFile output_filepath WriteMode
+        let male_result = applyJaccard algorithm size sku_src_male sku_dst_male purchase_map cart_map view_map
+            female_result = applyJaccard algorithm size sku_src_female sku_dst_female purchase_map cart_map view_map
+        hPutStrLn outh (toStr country male_result)
+        hPutStrLn outh (toStr country female_result)
+        hClose outh
+
+
+applyJaccard :: Algorithm -> ItemSize -> DS.Set SKU -> DS.Set SKU -> SKU_USER_Map -> SKU_USER_Map -> SKU_USER_Map -> [[((SKU, SKU), Float)]]
+applyJaccard algorithm size sku_src sku_dst purchase_map cart_map view_map = 
+  let valid_sku_pairs_list = groupBy (\x y -> fst x == fst y) $ filter (isPairValid algorithm purchase_map cart_map view_map) [(sku1, sku2) | sku1 <- (DS.toList sku_src), sku2 <- (DS.toList sku_dst)]
+      jaccard_scores_list = [map (calcJaccardScore algorithm purchase_map cart_map view_map) valid_sku_pairs | valid_sku_pairs <- valid_sku_pairs_list]
+      joined_list = [sortBy (flip (comparing snd)) $ zip valid_sku_pairs jaccard_scores | valid_sku_pairs <- valid_sku_pairs_list, jaccard_scores <- jaccard_scores_list]
+  in take size joined_list
+
+
+isPairValid :: Algorithm -> SKU_USER_Map -> SKU_USER_Map -> SKU_USER_Map -> (SKU, SKU) -> Bool
+isPairValid algorithm purchase_map cart_map view_map sku_pair =
+  let sku1 = fst sku_pair
+      sku2 = snd sku_pair
+      set_logic = case algorithm of
+                        "original" -> not . DS.null $ DS.intersection (safeGetValue cart_map sku2) (safeGetValue cart_map sku1)
+                        "bayes" -> not . DS.null $ DS.intersection (safeGetValue purchase_map sku2) (safeGetValue purchase_map sku1)
+                        "vtd" -> not . DS.null $ DS.intersection (safeGetValue purchase_map sku2) (safeGetValue view_map sku1)
+  in sku1 /= sku2 && set_logic
+
+
+mapTuple2 :: (a -> b) -> (a, a) -> (b, b)
+mapTuple2 f (a1, a2) = (f a1, f a2)
+
+
+safeGetValue :: SKU_USER_Map -> SKU -> DS.Set USER
+safeGetValue m k = Map.lookupDefault DS.empty k m
+
+
+calcJaccardScore :: Algorithm -> SKU_USER_Map -> SKU_USER_Map -> SKU_USER_Map -> (SKU, SKU) -> Float
+calcJaccardScore algorithm purchase_map cart_map view_map sku_pair =
+  let view_sku_pair = mapTuple2 (safeGetValue view_map) sku_pair
+      purchase_sku_pair = mapTuple2 (safeGetValue purchase_map) sku_pair
+      cart_sku_pair = mapTuple2 (safeGetValue cart_map) sku_pair
+
+      ints_cart = floatSize $ DS.intersection (fst cart_sku_pair) (snd cart_sku_pair)
+      ints_view = floatSize $ DS.intersection (fst view_sku_pair) (snd view_sku_pair)
+      ints_purchase = floatSize $ DS.intersection (fst purchase_sku_pair) (snd purchase_sku_pair)
+      ints_purchase1_view2 = floatSize $ DS.intersection (fst purchase_sku_pair) (snd view_sku_pair)
+      ints_purchase2_view1 = floatSize $ DS.intersection (snd purchase_sku_pair) (fst view_sku_pair)
+  in case algorithm of
+        "original" -> (wilson95 ints_purchase ((floatSize (fst purchase_sku_pair)) + (floatSize (snd purchase_sku_pair)) - ints_purchase)) 
+                      + 0.2 * (wilson95 ints_cart ((floatSize (fst cart_sku_pair)) + (floatSize (snd cart_sku_pair)) - ints_cart))
+        "bayes" -> wilson95 ints_purchase (ints_purchase1_view2 + ints_purchase2_view1)
+        "vtd" -> wilson95 ints_purchase2_view1 ints_view
+  where floatSize = fromIntegral . DS.size
+
 
 wilson95 :: Float -> Float -> Float
 wilson95 0 _ = 0
@@ -135,3 +152,4 @@ wilson95 positive negative = 100 * ((positive + 1.9208) / (positive + negative) 
 -- 8.221716570901549
 -- > wilson95 100 200
 -- 28.239255979025565
+
