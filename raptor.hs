@@ -140,9 +140,10 @@ toStr country results = unlines [intercalate "\t" $ [country, (B.unpack . fst . 
 main :: IO ()
 main = do
         args <- getArgs
-        let (country, size, algorithm, home) = processArgs args
+        let s@(country, size, algorithm, home) = processArgs args
             data_directories = getDataDirectories home country
             output_filepath = getOutputFilePath home algorithm country
+        putStrLn $ "running with options: " ++ show s
         (purchase_map:view_map:cart_map:_) <- buildMapsFromFile (take 4 data_directories)
         (sku_dst:sku_src:sku_male:sku_female:_) <- buildSetsFromFile (take 4 $ drop 3 data_directories)
         let sku_dst_male = DS.intersection sku_male sku_dst
