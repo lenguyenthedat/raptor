@@ -1,94 +1,26 @@
 -- Copyright 2013 Dat Le <dat.le@zalora.com>
-
 module Main where
 
-import qualified Data.ByteString.Char8 as B
+import qualified Data.ByteString.Lazy.Char8 as B
+import qualified Data.ByteString.Char8 as BS
 import qualified Data.Set as DS
 import qualified Data.HashMap.Strict as Map
 
-import Data.List.Split
 import Data.List
 import Data.Char
 import System.IO
 import System.Environment
-import Text.Printf
-import Data.Ord
+import Text.Printf (printf)
+import Data.Ord (comparing)
 
-type DataFrame    = [[String]]
-type Row          = [String]
-type SKU          = String
+type DataFrame    = [[B.ByteString]]
+type SKU          = B.ByteString
 type Algorithm    = String
-type SKU_Distance = String
-type USER         = String
+type SKU_Distance = B.ByteString
+type USER         = B.ByteString
 type ItemSize     = Int
 type SKU_USER_Map = Map.HashMap SKU (DS.Set USER)
 type Score = Float
-
-
-buildSetsFromFile :: [FilePath] -> IO [DS.Set SKU]
-buildSetsFromFile files = mapM (\f -> return $ DS.fromList $ indexAsList f) files
-
-
-buildMapsFromFile :: [FilePath] -> IO ([SKU_USER_Map])
-buildMapsFromFile files = mapM (\f -> return $ toMap f) files
-
-
-toMap :: String -> SKU_USER_Map
-toMap input = Map.fromList $ map (\row -> (row !! 0, DS.fromList $ splitOn " " (row !!1))) $ toDataFrame input
--- > toMap "A\t1 2 3 4\nB\t1 2 5 6"
--- fromList [("A",["1","2","3","4"]),("B",["1","2","5","6"])]
-
-
-indexAsList :: String -> [String]
-indexAsList input = map (\row -> row !! 0) $ toDataFrame input
--- > indexAsList "1\t2\t3\n4\t5\t6\n7\t8\t9"
--- ["1","4","7"]
-
-
-toDataFrame :: String -> DataFrame
-toDataFrame input = map (splitOn "\t") (lines input)
--- > toDataFrame "a\tb\n1\t2"
--- [["a","b"],["1","2"]]
-
-
--- purchase, view, cart, valid, instock, male, female
-getDataDirectories :: String -> String -> [FilePath]
-getDataDirectories home country =
-  let file_extension = ".csv"
-      data_directory_name = "/Data"
-      data_types = ["/VTD_purchased_", "/VTD_view_", "/VTD_cart_", "/valid_skus_", "/instock_skus_", "/sku_male_", "/sku_female_"]
-  in map (\t -> concat [home, data_directory_name, t, country, file_extension]) data_types
-
-
-getOutputFilePath :: String -> String -> String -> FilePath
-getOutputFilePath home algorithm country = concat [home, "/Result/", algorithm, "/Raptor_", country, ".csv"]
-
-
-processArgs :: [String] -> (String,Int,String, String) -- country, size, algorithm, home folder
-processArgs xs | length xs == 4 = (xs !! 0, read (xs !! 1), xs !! 2, xs !! 3)
-               | otherwise      = ("sg"   , 3             , "vtd"  , "./Test") -- Testing / Default value
-
-toStr :: String -> [[((SKU, SKU), Float)]] -> String
-toStr country results = unlines [intercalate "\t" $ [(fst . fst . head) result] ++ (map (\((a, b), score) -> (printf "%.2f" score :: String) ++ "-" ++ b) result) | result <- results]
-
-main :: IO ()
-main = do
-        args  <- getArgs
-        let (country, size, algorithm, home) = processArgs args
-            data_directories = getDataDirectories home country
-            output_filepath = getOutputFilePath home algorithm country
-        (purchase_map:view_map:cart_map:_) <- buildMapsFromFile (take 4 data_directories)
-        (sku_dst:sku_src:sku_male:sku_female:_) <- buildSetsFromFile (take 4 $ drop 3 data_directories)
-        let sku_dst_male = DS.intersection sku_male sku_dst
-            sku_dst_female = DS.intersection sku_female sku_dst
-            sku_src_male = DS.intersection sku_male sku_src
-            sku_src_female = DS.intersection sku_female sku_src
-        outh <- openFile output_filepath WriteMode
-        let male_result = applyJaccard algorithm size sku_src_male sku_dst_male purchase_map cart_map view_map
-            female_result = applyJaccard algorithm size sku_src_female sku_dst_female purchase_map cart_map view_map
-        hPutStrLn outh (toStr country male_result)
-        hPutStrLn outh (toStr country female_result)
-        hClose outh
 
 
 applyJaccard :: Algorithm -> ItemSize -> DS.Set SKU -> DS.Set SKU -> SKU_USER_Map -> SKU_USER_Map -> SKU_USER_Map -> [[((SKU, SKU), Float)]]
@@ -153,3 +85,74 @@ wilson95 positive negative = 100 * ((positive + 1.9208) / (positive + negative) 
 -- > wilson95 100 200
 -- 28.239255979025565
 
+
+buildSetsFromFile :: [FilePath] -> IO [DS.Set SKU]
+buildSetsFromFile files = mapM (\f -> do
+                                        c <- B.readFile f
+                                        return $ DS.fromList $ indexAsList c) files
+
+
+buildMapsFromFile :: [FilePath] -> IO ([SKU_USER_Map])
+buildMapsFromFile files = mapM (\f -> do 
+                                        c <- B.readFile f 
+                                        return $ toMap c) files
+
+
+toMap :: B.ByteString -> SKU_USER_Map
+toMap input = Map.fromList $ map (\row -> (row !! 0, DS.fromList $ B.split ' ' (row !! 1))) $ toDataFrame input
+-- > toMap "A\t1 2 3 4\nB\t1 2 5 6"
+-- fromList [("A",["1","2","3","4"]),("B",["1","2","5","6"])]
+
+
+indexAsList :: B.ByteString -> [B.ByteString]
+indexAsList input = map (\row -> row !! 0) $ toDataFrame input
+-- > indexAsList "1\t2\t3\n4\t5\t6\n7\t8\t9"
+-- ["1","4","7"]
+
+
+toDataFrame :: B.ByteString -> DataFrame
+toDataFrame input = map (B.split '\t') (B.lines input)
+-- > toDataFrame "a\tb\n1\t2"
+-- [["a","b"],["1","2"]]
+
+
+-- purchase, view, cart, valid, instock, male, female
+getDataDirectories :: String -> String -> [FilePath]
+getDataDirectories home country =
+  let file_extension = ".csv"
+      data_directory_name = "/Data"
+      data_types = ["/VTD_purchased_", "/VTD_view_", "/VTD_cart_", "/valid_skus_", "/instock_skus_", "/sku_male_", "/sku_female_"]
+  in map (\t -> concat [home, data_directory_name, t, country, file_extension]) data_types
+
+
+getOutputFilePath :: String -> String -> String -> FilePath
+getOutputFilePath home algorithm country = concat [home, "/Result/", algorithm, "/Raptor_", country, ".csv"]
+
+
+processArgs :: [String] -> (String, Int, String, String) -- country, size, algorithm, home folder
+processArgs xs | length xs == 4 = (xs !! 0, read (xs !! 1), xs !! 2, xs !! 3)
+               | otherwise      = ("sg"   , 3             , "vtd"  , "./Test") -- Testing / Default value
+
+
+toStr :: String -> [[((SKU, SKU), Float)]] -> String
+toStr country results = unlines [intercalate "\t" $ [(B.unpack . fst . fst . head) result] ++ (map (\((a, b), score) -> (printf "%.2f" score :: String) ++ "-" ++ (B.unpack b)) result) | result <- results]
+
+
+main :: IO ()
+main = do
+        args <- getArgs
+        let (country, size, algorithm, home) = processArgs args
+            data_directories = getDataDirectories home country
+            output_filepath = getOutputFilePath home algorithm country
+        (purchase_map:view_map:cart_map:_) <- buildMapsFromFile (take 4 data_directories)
+        (sku_dst:sku_src:sku_male:sku_female:_) <- buildSetsFromFile (take 4 $ drop 3 data_directories)
+        let sku_dst_male = DS.intersection sku_male sku_dst
+            sku_dst_female = DS.intersection sku_female sku_dst
+            sku_src_male = DS.intersection sku_male sku_src
+            sku_src_female = DS.intersection sku_female sku_src
+        outh <- openFile output_filepath WriteMode
+        let male_result = applyJaccard algorithm size sku_src_male sku_dst_male purchase_map cart_map view_map
+            female_result = applyJaccard algorithm size sku_src_female sku_dst_female purchase_map cart_map view_map
+        hPutStrLn outh (toStr country male_result)
+        hPutStrLn outh (toStr country female_result)
+        hClose outh
