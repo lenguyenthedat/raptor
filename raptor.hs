@@ -22,12 +22,22 @@ type SKU_USER_Map = Map.HashMap SKU (DS.Set USER)
 type Score = Float
 
 
-applyJaccard :: Algorithm -> ItemSize -> DS.Set SKU -> DS.Set SKU -> SKU_USER_Map -> SKU_USER_Map -> SKU_USER_Map -> [[((SKU, SKU), Float)]]
+convertToSourceMap :: DS.Set SKU -> [[((SKU, SKU), Score)]] -> [(SKU, [(SKU, Score)])]
+convertToSourceMap sku_src pair_score_lists = 
+  let results = [ ( (fst . fst . head $ pair_score_list),  (map (\((_,b), score) -> (b, score)) pair_score_list) ) | pair_score_list <- pair_score_lists]
+      empty_elements_set = DS.difference sku_src (DS.fromList (map fst results))
+      serialized = serializeEmptyElementSet empty_elements_set
+  in sort (results ++ serialized)
+  where 
+    serializeEmptyElementSet m = map (\x -> (x, [])) (DS.toList m)
+
+
+applyJaccard :: Algorithm -> ItemSize -> DS.Set SKU -> DS.Set SKU -> SKU_USER_Map -> SKU_USER_Map -> SKU_USER_Map -> [[((SKU, SKU), Score)]]
 applyJaccard algorithm size sku_src sku_dst purchase_map cart_map view_map = 
   let valid_sku_pairs_list = groupBy (\x y -> fst x == fst y) $ filter (isPairValid algorithm purchase_map cart_map view_map) [(sku1, sku2) | sku1 <- (DS.toList sku_src), sku2 <- (DS.toList sku_dst)]
       jaccard_scores_list = [map (calcJaccardScore algorithm purchase_map cart_map view_map) valid_sku_pairs | valid_sku_pairs <- valid_sku_pairs_list]
-      joined_list = [sortBy (flip (comparing snd)) $ zip valid_sku_pairs jaccard_scores | valid_sku_pairs <- valid_sku_pairs_list, jaccard_scores <- jaccard_scores_list]
-  in take size joined_list
+      joined_list = zipWith (\x y -> sortBy (flip (comparing snd)) $ zip x y) valid_sku_pairs_list jaccard_scores_list
+  in map (take size) joined_list
 
 
 isPairValid :: Algorithm -> SKU_USER_Map -> SKU_USER_Map -> SKU_USER_Map -> (SKU, SKU) -> Bool
@@ -49,7 +59,7 @@ safeGetValue :: SKU_USER_Map -> SKU -> DS.Set USER
 safeGetValue m k = Map.lookupDefault DS.empty k m
 
 
-calcJaccardScore :: Algorithm -> SKU_USER_Map -> SKU_USER_Map -> SKU_USER_Map -> (SKU, SKU) -> Float
+calcJaccardScore :: Algorithm -> SKU_USER_Map -> SKU_USER_Map -> SKU_USER_Map -> (SKU, SKU) -> Score
 calcJaccardScore algorithm purchase_map cart_map view_map sku_pair =
   let view_sku_pair = mapTuple2 (safeGetValue view_map) sku_pair
       purchase_sku_pair = mapTuple2 (safeGetValue purchase_map) sku_pair
@@ -68,7 +78,7 @@ calcJaccardScore algorithm purchase_map cart_map view_map sku_pair =
   where floatSize = fromIntegral . DS.size
 
 
-wilson95 :: Float -> Float -> Float
+wilson95 :: Float -> Float -> Score
 wilson95 0 _ = 0
 wilson95 positive negative = 100 * ((positive + 1.9208) / (positive + negative) - 1.96 * sqrt((positive * negative) / (positive + negative) + 0.9604) / (positive + negative)) /  (1 + 3.8416 / (positive + negative))
 -- > wilson95 1 2
@@ -133,8 +143,8 @@ processArgs xs | length xs == 4 = (xs !! 0, read (xs !! 1), xs !! 2, xs !! 3)
                | otherwise      = ("sg"   , 3             , "vtd"  , "./Test") -- Testing / Default value
 
 
-toStr :: String -> [[((SKU, SKU), Float)]] -> String
-toStr country results = unlines [intercalate "\t" $ [country, (B.unpack . fst . fst . head) result] ++ (map (\((_, b), score) -> (printf "%.2f" score :: String) ++ "-" ++ (B.unpack b)) result) | result <- results]
+toStr :: String -> [(SKU, [(SKU, Score)])] -> String
+toStr country results = unlines [intercalate "\t" $ [country, (B.unpack . fst) result] ++ (map (\(b, score) -> (printf "%.2f" score :: String) ++ "-" ++ (B.unpack b)) (snd result)) | result <- results]
 
 
 main :: IO ()
@@ -157,8 +167,8 @@ main = do
                                _ -> error "Unknown algorithm type"
 
         outh <- openFile output_filepath WriteMode
-        let male_result = applyJaccard algorithm_type size sku_src_male sku_dst_male purchase_map cart_map view_map
-            female_result = applyJaccard algorithm_type size sku_src_female sku_dst_female purchase_map cart_map view_map
-        hPutStrLn outh (toStr country male_result)
-        hPutStrLn outh (toStr country female_result)
+        let male_result = convertToSourceMap sku_src_male $ applyJaccard algorithm_type size sku_src_male sku_dst_male purchase_map cart_map view_map
+            female_result = convertToSourceMap sku_src_female $ applyJaccard algorithm_type size sku_src_female sku_dst_female purchase_map cart_map view_map
+        hPutStr outh (toStr country male_result)
+        hPutStr outh (toStr country female_result)
         hClose outh
