@@ -5,8 +5,8 @@ import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.Set as DS
 import qualified Data.HashMap.Strict as Map
 
-import Data.List
-import System.IO
+import Data.List (sort, sortBy, groupBy, intercalate)
+import System.IO (openFile, hPutStr, hClose, IOMode(..))
 import System.Environment (getArgs)
 import Text.Printf (printf)
 import Data.Ord (comparing)
