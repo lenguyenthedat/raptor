@@ -1,6 +1,8 @@
 Raptor
 ======
 
+<a href="url"><img src="./assets/raptor.png" align="right" height="169" width="220" ></a>
+
 An Online Retail Recommendation Engine developed in Haskell.
 
 Raptor learns from customer behaviors when they do online shopping: 
