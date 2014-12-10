@@ -1,8 +1,8 @@
 sg	sku5	7.38-sku8
-sg	sku6	
+sg	sku6
 sg	sku7	7.38-sku8
 sg	sku8	7.38-sku5	7.38-sku7
-sg	sku9	
+sg	sku9
 sg	sku0	18.00-sku3	14.11-sku1	7.06-sku2
 sg	sku1	14.11-sku3	5.28-sku2	4.65-sku4
 sg	sku2	7.06-sku3	5.28-sku1	0.60-sku4
