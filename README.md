@@ -136,18 +136,14 @@ Build with cabal-dev:
     Configuring raptor-0.1.0.0...
     Building raptor-0.1.0.0...
     Preprocessing executable 'raptor' for raptor-0.1.0.0...
-    Preprocessing executable 'joining-raptors' for raptor-0.1.0.0...
-    Preprocessing executable 'hamming' for raptor-0.1.0.0...
     Warning: No documentation was generated as this package does not contain a
     library. Perhaps you want to use the --executables flag.
     Installing executable(s) in /Users/datle/GitHub/cabinet/Raptor/cabal-dev//bin
     Installed raptor-0.1.0.0
     Warning: could not create symlinks in /Users/datle/Library/Haskell/bin for
-    joining-raptors, hamming, raptor because the files exist there already and are
+    raptor because the files exist there already and are
     not managed by cabal. You can create symlinks for these executables manually
     if you wish. The executable files have been installed at
-    /Users/xxx/GitHub/cabinet/Raptor/cabal-dev/bin/joining-raptors,
-    /Users/xxx/GitHub/cabinet/Raptor/cabal-dev/bin/hamming,
     /Users/xxx/GitHub/cabinet/Raptor/cabal-dev/bin/raptor
 
 Build with ghc:
@@ -155,10 +151,6 @@ Build with ghc:
     $ ghc raptor.hs
     [1 of 1] Compiling Main             ( raptor.hs, raptor.o )
     Linking raptor ...
-    
-    $ ghc Joining-Raptors.hs 
-    [1 of 1] Compiling Main             ( Joining-Raptors.hs, Joining-Raptors.o )
-    Linking Joining-Raptors ...
 
 original
 --------
@@ -210,25 +202,3 @@ vtd
     sg	sku2	15.00-sku4	9.45-sku3	4.56-sku1
     sg	sku3	15.00-sku1	9.45-sku2
     sg	sku4	9.68-sku1	9.45-sku3
-
-joining_raptors
----------------
-
-    $ file1=Test/Result/bayes/Raptor_sg.csv
-    $ file2=Test/Result/vtd/Raptor_sg.csv
-    $ file3=Test/Result/original/Raptor_sg.csv
-    $ result=Test/Result/joined.csv
-    
-    $ .cabal-sandbox/bin/Joining-Raptors sg 3 $result $file1 $file2 $file3
-
-    $ cat Test/Result/joined.csv 
-    sg	sku5	22.98-sku8	9.45-sku6
-    sg	sku6
-    sg	sku7	22.98-sku8	9.45-sku6
-    sg	sku8	22.98-sku5	22.98-sku7
-    sg	sku9	9.45-sku7	9.45-sku8
-    sg	sku0	42.68-sku3	38.15-sku1	19.36-sku2
-    sg	sku1	38.79-sku3	23.48-sku4	15.99-sku2
-    sg	sku2	22.66-sku3	15.99-sku1	15.60-sku4
-    sg	sku3	38.79-sku1	22.66-sku2	0.60-sku4
-    sg	sku4	17.34-sku1	10.05-sku3	0.60-sku2
