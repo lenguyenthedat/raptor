@@ -98,16 +98,36 @@ Sample Input
 
 Sample Output
 -----------
-    
-Build with ghc:
 
-    $ ghc raptor.hs
-    [1 of 1] Compiling Main             ( raptor.hs, raptor.o )
-    Linking raptor ...
+Build with cabal sandbox:
     
-    $ ghc Joining-Raptors.hs 
-    [1 of 1] Compiling Main             ( Joining-Raptors.hs, Joining-Raptors.o )
-    Linking Joining-Raptors ...
+    $ cabal install
+    Resolving dependencies...
+    Notice: installing into a sandbox located at
+    /Users/datle/GitHub/cabinet/raptor/.cabal-sandbox
+    Configuring split-0.2.2...
+    Downloading strict-0.3.2...
+    Configuring text-1.2.0.0...
+    Configuring strict-0.3.2...
+    Building text-1.2.0.0...
+    Building split-0.2.2...
+    Building strict-0.3.2...
+    Installed split-0.2.2
+    Installed strict-0.3.2
+    Downloading nlp-scores-0.6.2...
+    Configuring nlp-scores-0.6.2...
+    Building nlp-scores-0.6.2...
+    Installed nlp-scores-0.6.2
+    Installed text-1.2.0.0
+    Configuring hashable-1.2.2.0...
+    Building hashable-1.2.2.0...
+    Installed hashable-1.2.2.0
+    Configuring unordered-containers-0.2.5.1...
+    Building unordered-containers-0.2.5.1...
+    Installed unordered-containers-0.2.5.1
+    Configuring raptor-0.1.0.0...
+    Building raptor-0.1.0.0...
+    Installed raptor-0.1.0.0
 
 Build with cabal-dev:
 
@@ -130,10 +150,20 @@ Build with cabal-dev:
     /Users/xxx/GitHub/cabinet/Raptor/cabal-dev/bin/hamming,
     /Users/xxx/GitHub/cabinet/Raptor/cabal-dev/bin/raptor
 
+Build with ghc:
+
+    $ ghc raptor.hs
+    [1 of 1] Compiling Main             ( raptor.hs, raptor.o )
+    Linking raptor ...
+    
+    $ ghc Joining-Raptors.hs 
+    [1 of 1] Compiling Main             ( Joining-Raptors.hs, Joining-Raptors.o )
+    Linking Joining-Raptors ...
+
 original
 --------
 
-    $ ./raptor sg 3 original Test/
+    $ .cabal-sandbox/bin/raptor sg 3 original Test/
     
     $ cat Test/Result/original/Raptor_sg.csv 
     sg	sku5	7.38-sku8
@@ -150,7 +180,7 @@ original
 bayes
 -----
 
-    $ ./raptor sg 3 bayes Test/
+    $ .cabal-sandbox/bin/raptor sg 3 bayes Test/
     
     $ cat Test/Result/bayes/Raptor_sg.csv 
     sg	sku5	6.15-sku8
@@ -167,7 +197,7 @@ bayes
 vtd
 ---
 
-    $ ./raptor sg 3 vtd Test/
+    $ .cabal-sandbox/bin/raptor sg 3 vtd Test/
     
     $ cat Test/Result/vtd/Raptor_sg.csv 
     sg	sku5	9.45-sku6	9.45-sku8
@@ -189,7 +219,7 @@ joining_raptors
     $ file3=Test/Result/original/Raptor_sg.csv
     $ result=Test/Result/joined.csv
     
-    $ ./Joining-Raptors sg 3 $result $file1 $file2 $file3
+    $ .cabal-sandbox/bin/Joining-Raptors sg 3 $result $file1 $file2 $file3
 
     $ cat Test/Result/joined.csv 
     sg	sku5	22.98-sku8	9.45-sku6

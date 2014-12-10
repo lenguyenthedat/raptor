@@ -3,7 +3,7 @@
 ALL_PASS=true
 for t in vtd original bayes
 do
-    ./dist/build/raptor/raptor sg 3 $t ./Test
+    .cabal-sandbox/bin/raptor sg 3 $t ./Test
     CHANGED=$(git --no-pager diff --ignore-space-change ./Test/Result/$t/Raptor_sg.csv)
     
     if [ -n "$CHANGED" ]; then
