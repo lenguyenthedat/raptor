@@ -140,7 +140,7 @@ getOutputFilePath home algorithm country = concat [home, "/Result/", algorithm, 
 
 processArgs :: [String] -> (String, Int, String, String) -- country, size, algorithm, home folder
 processArgs xs | length xs == 4 = (xs !! 0, read (xs !! 1), xs !! 2, xs !! 3)
-               | otherwise      = ("sg"   , 3             , "vtd"  , "./Test") -- Testing / Default value
+               | otherwise      = ("sg"   , 3             , "vtd"  , "./test") -- Testing / Default value
 
 
 toStr :: String -> [(SKU, [(SKU, Score)])] -> String

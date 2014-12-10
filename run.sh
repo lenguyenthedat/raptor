@@ -3,8 +3,8 @@
 ALL_PASS=true
 for t in vtd original bayes
 do
-    .cabal-sandbox/bin/raptor sg 3 $t ./Test
-    CHANGED=$(git --no-pager diff --ignore-space-change ./Test/Result/$t/Raptor_sg.csv)
+    .cabal-sandbox/bin/raptor sg 3 $t ./test
+    CHANGED=$(git --no-pager diff --ignore-space-change ./test/Result/$t/Raptor_sg.csv)
     
     if [ -n "$CHANGED" ]; then
         echo "test case for $t doesn't pass"

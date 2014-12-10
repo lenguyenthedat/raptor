@@ -25,7 +25,7 @@ http://www.evanmiller.org/how-not-to-sort-by-average-rating.html
 Sample Input
 ---------
 
-    $ cat Test/Data/VTD_view_sg.csv 
+    $ cat test/Data/VTD_view_sg.csv 
     sku0	cust1 cust2 cust3 cust4
     sku1	cust1 cust2 cust3 cust4 cust5
     sku2	cust2 cust4 cust5
@@ -37,7 +37,7 @@ Sample Input
     sku8	cust1 cust4
     sku9	cust2 cust4
 
-    $ cat Test/Data/VTD_cart_sg.csv 
+    $ cat test/Data/VTD_cart_sg.csv 
     sku0	cust1 cust2
     sku1	cust1 cust2 cust3
     sku2	cust2 cust4
@@ -49,7 +49,7 @@ Sample Input
     sku8	cust1 cust4
     sku9	cust2
 
-    $ cat Test/Data/VTD_purchased_sg.csv 
+    $ cat test/Data/VTD_purchased_sg.csv 
     sku0	cust1 cust2
     sku1	cust1 cust2 cust3
     sku2	cust2
@@ -61,21 +61,21 @@ Sample Input
     sku8	cust1 cust4
     sku9	cust2
 
-    $ cat Test/Data/sku_male_sg.csv 
+    $ cat test/Data/sku_male_sg.csv 
     sku5
     sku6
     sku7
     sku8
     sku9
 
-    $ cat Test/Data/sku_female_sg.csv 
+    $ cat test/Data/sku_female_sg.csv 
     sku0
     sku1
     sku2
     sku3
     sku4
 
-    $ cat Test/Data/instock_skus_sg.csv 
+    $ cat test/Data/instock_skus_sg.csv 
     sku0
     sku1
     sku2
@@ -86,7 +86,7 @@ Sample Input
     sku7
     sku8
 
-    $ cat Test/Data/valid_skus_sg.csv 
+    $ cat test/Data/valid_skus_sg.csv 
     sku1
     sku2
     sku3
@@ -155,9 +155,9 @@ Build with ghc:
 original
 --------
 
-    $ .cabal-sandbox/bin/raptor sg 3 original Test/
+    $ .cabal-sandbox/bin/raptor sg 3 original test/
     
-    $ cat Test/Result/original/Raptor_sg.csv 
+    $ cat test/Result/original/Raptor_sg.csv 
     sg	sku5	7.38-sku8
     sg	sku6	
     sg	sku7	7.38-sku8
@@ -172,9 +172,9 @@ original
 bayes
 -----
 
-    $ .cabal-sandbox/bin/raptor sg 3 bayes Test/
+    $ .cabal-sandbox/bin/raptor sg 3 bayes test/
     
-    $ cat Test/Result/bayes/Raptor_sg.csv 
+    $ cat test/Result/bayes/Raptor_sg.csv 
     sg	sku5	6.15-sku8
     sg	sku6	
     sg	sku7	6.15-sku8
@@ -189,9 +189,9 @@ bayes
 vtd
 ---
 
-    $ .cabal-sandbox/bin/raptor sg 3 vtd Test/
+    $ .cabal-sandbox/bin/raptor sg 3 vtd test/
     
-    $ cat Test/Result/vtd/Raptor_sg.csv 
+    $ cat test/Result/vtd/Raptor_sg.csv 
     sg	sku5	9.45-sku6	9.45-sku8
     sg	sku6	
     sg	sku7	9.45-sku6	9.45-sku8
