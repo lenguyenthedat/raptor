@@ -96,11 +96,20 @@ Sample Input
     sku7
     sku8
 
-Sample Output
------------
+Clone and build:
+----------------
+
+Clone the repo:
+
+	$ https://github.com/lenguyenthedat/raptor.git
+
+Build with Docker
+
+	$ cd raptor/
+	$ sudo docker build --rm=true -t raptor .
 
 Build with cabal sandbox:
-    
+
     $ cabal install
     Resolving dependencies...
     Notice: installing into a sandbox located at
@@ -152,8 +161,14 @@ Build with ghc:
     [1 of 1] Compiling Main             ( raptor.hs, raptor.o )
     Linking raptor ...
 
+Sample output:
+--------------
+
+Run with docker: use `docker run raptor` as a prefix for every command, for example:
+
+	$ docker run raptor .cabal-sandbox/bin/raptor sg 3 original test/
+
 original
---------
 
     $ .cabal-sandbox/bin/raptor sg 3 original test/
     
@@ -170,7 +185,6 @@ original
     sg	sku4	4.65-sku1	0.60-sku2	0.60-sku3
 
 bayes
------
 
     $ .cabal-sandbox/bin/raptor sg 3 bayes test/
     
@@ -187,7 +201,6 @@ bayes
     sg	sku4	3.01-sku1
 
 vtd
----
 
     $ .cabal-sandbox/bin/raptor sg 3 vtd test/
     
