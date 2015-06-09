@@ -18,12 +18,18 @@ Basically tries to answer the question: if a customer view this item, what are t
 
 Base on the nature of each algorithms, Original and Bayes Jaccard are more applicable for a Cart Based Recommendation System, while VTD is more  applicable for the Product Based Recommendation System.
 
-The scoring function for these approach is powered by Wilson Score (for simplicity, Wilson score of 95% confidence):
-http://www.evanmiller.org/how-not-to-sort-by-average-rating.html
+[Wilson Score](http://www.evanmiller.org/how-not-to-sort-by-average-rating.html) (of 95% confidence) is used to take care of significance in the approaches.
+
+Raptor In Action
+----------------
+
+The below real-world results were achieved by using a combination of Raptor as a core Collaborative Filtering engine together with a numerous of domain specific knowledge engines and tweaks:
+
+<a href="url"><img src="./assets/raptor-in-action.png"></a>
 
 
 Sample Input
----------
+------------
 
     $ cat test/Data/VTD_view_sg.csv 
     sku0	cust1 cust2 cust3 cust4
