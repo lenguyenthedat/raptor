@@ -1,7 +1,7 @@
 Raptor
 ======
 
-<a href="url"><img src="./assets/raptor.png" align="right" height="169" width="220" ></a>
+<a href="https://raw.githubusercontent.com/lenguyenthedat/raptor/master/assets/raptor.png"><img src="./assets/raptor.png" align="right" height="169" width="220" ></a>
 
 An Online Retail Recommendation Engine developed in Haskell.
 
@@ -25,7 +25,7 @@ Raptor In Action
 
 The below real-world results were achieved by using a combination of Raptor as a core Collaborative Filtering engine together with a numerous of domain specific knowledge engines and tweaks:
 
-<a href="url"><img src="./assets/raptor-in-action.png"></a>
+<a href="https://raw.githubusercontent.com/lenguyenthedat/raptor/master/assets/raptor-in-action.png"><img src="./assets/raptor-in-action.png"></a>
 
 
 Sample Input
