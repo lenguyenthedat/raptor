@@ -16,7 +16,7 @@ Currently there are 3 different algorithms - specified in raptor.hs:
 - VTD, a slightly different approach. The idea of this approach is to look closer as customer Views data. 
 Basically tries to answer the question: if a customer view this item, what are the most likely items that the customer is going to buy.
 
-Base on the nature of each algorithms, Original and Bayes Jaccard are more applicable for a Cart Based Recommendation System, while VTD is more  applicable for the Product Based Recommendation System.
+Base on the nature of each algorithms, Original and Bayes Jaccard are more applicable for a cart-page recommendations, while VTD is more applicable for the product-page recommendations.
 
 [Wilson Score](http://www.evanmiller.org/how-not-to-sort-by-average-rating.html) (of 95% confidence) is used to take care of significance in the approaches.
 
