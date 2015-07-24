@@ -8,6 +8,7 @@ import qualified Data.HashMap.Strict as Map
 import Data.List (sort, sortBy, groupBy, intercalate)
 import System.IO (openFile, hPutStr, hClose, IOMode(..))
 import System.Environment (getArgs)
+import System.Directory (createDirectoryIfMissing)
 import Text.Printf (printf)
 import Data.Ord (comparing)
 
@@ -137,6 +138,8 @@ getDataDirectories home country =
 getOutputFilePath :: String -> String -> String -> FilePath
 getOutputFilePath home algorithm country = concat [home, "/Result/", algorithm, "/Raptor_", country, ".csv"]
 
+getOutputFileFolder :: String -> String -> FilePath
+getOutputFileFolder home algorithm = concat [home, "/Result/", algorithm]
 
 processArgs :: [String] -> (String, Int, String, String) -- country, size, algorithm, home folder
 processArgs xs | length xs == 4 = (xs !! 0, read (xs !! 1), xs !! 2, xs !! 3)
@@ -153,6 +156,7 @@ main = do
         let s@(country, size, algorithm, home) = processArgs args
             data_directories = getDataDirectories home country
             output_filepath = getOutputFilePath home algorithm country
+            output_filefolder = getOutputFileFolder home algorithm
         putStrLn $ "running with options: " ++ show s
         (purchase_map:view_map:cart_map:_) <- buildMapsFromFile (take 4 data_directories)
         (sku_dst:sku_src:sku_male:sku_female:_) <- buildSetsFromFile (take 4 $ drop 3 data_directories)
@@ -165,7 +169,7 @@ main = do
                                "bayes" -> BAYES
                                "vtd" -> VTD
                                _ -> error "Unknown algorithm type"
-
+        createDirectoryIfMissing True output_filefolder
         outh <- openFile output_filepath WriteMode
         let male_result = convertToSourceMap sku_src_male $ applyJaccard algorithm_type size sku_src_male sku_dst_male purchase_map cart_map view_map
             female_result = convertToSourceMap sku_src_female $ applyJaccard algorithm_type size sku_src_female sku_dst_female purchase_map cart_map view_map
