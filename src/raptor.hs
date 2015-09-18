@@ -1,4 +1,3 @@
--- Copyright 2013 Dat Le <dat.le@zalora.com>
 module Main where
 
 import qualified Data.ByteString.Lazy.Char8 as B
