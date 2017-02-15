@@ -9,7 +9,6 @@ homepage:            https://github.com/lenguyenthedat/Raptor
 -- license:             
 license-file:        LICENSE
 author:              Dat Le
-maintainer:          thedat.lenguyen@gmail.com
 -- copyright:           
 category:            Data
 build-type:          Simple
